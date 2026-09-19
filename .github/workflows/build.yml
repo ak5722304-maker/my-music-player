@@ -1,0 +1,44 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.x'
+        channel: 'stable'
+
+    - name: Create Flutter Project Structure
+      run: |
+        flutter create --org com.adfree.musicplayer app_temp
+        cp -r app_temp/* .
+        rm -rf app_temp
+
+    - name: Add Dependencies
+      run: |
+        flutter pub add just_audio audio_service permission_handler on_audio_query
+
+    - name: Build Release APK
+      run: flutter build apk --release
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: adfree-music-player-apk
+        path: build/app/outputs
